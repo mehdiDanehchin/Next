@@ -29,7 +29,7 @@
                 android:layout_gravity="center"
                 android:contentDescription="@string/categories"
                 android:src="@drawable/ic_home"
-                android:tint="@color/primary" />
+                app:tint="@color/primary" />
         </FrameLayout>
 
         <TextView
