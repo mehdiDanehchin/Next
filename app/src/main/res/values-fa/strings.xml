@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">نکست</string>
+
+    <!-- Home Screen -->
+    <string name="search_hint">جستجوی محصولات...</string>
+    <string name="search_results">نتایج جستجو</string>
+    <string name="featured_products">محصولات ویژه</string>
+    <string name="popular_products">محصولات پرطرفدار</string>
+    <string name="categories">دسته‌بندی‌ها</string>
+    <string name="see_all">مشاهده همه</string>
+
+    <!-- Categories -->
+    <string name="category_phones">گوشی موبایل</string>
+    <string name="category_laptops">لپ‌تاپ</string>
+    <string name="category_cameras">دوربین</string>
+    <string name="category_accessories">لوازم جانبی</string>
+
+    <!-- Product Detail -->
+    <string name="add_to_cart">افزودن به سبد خرید</string>
+    <string name="add_to_wishlist">افزودن به علاقه‌مندی‌ها</string>
+    <string name="in_wishlist">در علاقه‌مندی‌ها</string>
+    <string name="remove_from_wishlist">حذف از علاقه‌مندی‌ها</string>
+    <string name="specifications">مشخصات فنی</string>
+    <string name="description">توضیحات</string>
+    <string name="no_description">توضیحی در دسترس نیست.</string>
+    <string name="no_specifications">مشخصاتی در دسترس نیست.</string>
+    <string name="loading_product">در حال بارگذاری محصول…</string>
+    <string name="product_not_found">محصول یافت نشد.</string>
+    <string name="load_error">خطا در بارگذاری محصول.</string>
+    <string name="go_back">بازگشت</string>
+    <string name="operation_failed">عملیات ناموفق بود. لطفاً دوباره تلاش کنید.</string>
+    <string name="added_to_cart">%s به سبد خرید اضافه شد!</string>
+    <string name="added_to_wishlist">به علاقه‌مندی‌ها اضافه شد</string>
+    <string name="removed_from_wishlist">از علاقه‌مندی‌ها حذف شد</string>
+
+    <!-- Cart -->
+    <string name="cart_empty">سبد خرید شما خالی است</string>
+    <string name="cart_start_shopping">برای شروع، محصولات را اضافه کنید!</string>
+    <string name="cart_total">جمع کل</string>
+    <string name="checkout">تسویه حساب</string>
+    <string name="demo_only">این یک اپلیکیشن دمو است. تسویه حساب در دسترس نیست.</string>
+    <string name="demo_only_title">فقط نسخه دمو</string>
+    <string name="removed_from_cart">%s از سبد خرید حذف شد</string>
+
+    <plurals name="cart_item_count">
+        <item quantity="one">%d کالا</item>
+        <item quantity="other">%d کالا</item>
+    </plurals>
+
+    <!-- Wishlist -->
+    <string name="wishlist_empty">لیست علاقه‌مندی‌های شما خالی است</string>
+    <string name="wishlist_empty_subtitle">برای ذخیره محصولات، روی آیکون قلب بزنید</string>
+
+    <plurals name="wishlist_item_count">
+        <item quantity="one">%d محصول</item>
+        <item quantity="other">%d محصول</item>
+    </plurals>
+
+    <!-- Profile -->
+    <string name="guest_user">کاربر مهمان</string>
+    <string name="guest_email">guest@next.com</string>
+    <string name="profile_avatar_letter">م</string>
+    <string name="app_version">اپلیکیشن دمو</string>
+    <string name="about_app">درباره نکست</string>
+    <string name="settings">تنظیمات</string>
+    <string name="about_description">نکست یک اپلیکیشن مدرن خرید کالاهای الکترونیکی است که به عنوان پروژه درسی دانشگاه ساخته شده است.</string>
+
+    <!-- Bottom Navigation -->
+    <string name="nav_home">خانه</string>
+    <string name="nav_wishlist">علاقه‌مندی‌ها</string>
+    <string name="nav_cart">سبد خرید</string>
+    <string name="nav_profile">پروفایل</string>
+
+    <!-- Theme Settings -->
+    <string name="theme_settings">پوسته</string>
+    <string name="theme_light">حالت روشن</string>
+    <string name="theme_dark">حالت تاریک</string>
+    <string name="theme_system">همگام با سیستم</string>
+
+    <!-- General -->
+    <string name="ok">باشه</string>
+    <string name="cancel">انصراف</string>
+    <string name="remove">حذف</string>
+    <string name="no_results">محصولی یافت نشد</string>
+    <string name="all_products">همه محصولات</string>
+    <string name="clear_filter">پاک کردن</string>
+    <string name="filtering_by">%s</string>
+    <string name="rating_format">%.1f</string>
+
+    <!-- Content descriptions (accessibility) -->
+    <string name="cd_back_home">بازگشت به خانه</string>
+    <string name="cd_clear_filter">پاک کردن فیلتر</string>
+    <string name="cd_search">جستجو</string>
+    <string name="cd_favorite">علاقه‌مندی</string>
+    <string name="cd_back">بازگشت</string>
+    <string name="cd_decrease">کاهش</string>
+    <string name="cd_increase">افزایش</string>
+    <string name="cd_remove">حذف</string>
+</resources>

@@ -1,0 +1,70 @@
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.compose)
+}
+
+android {
+    namespace 'com.example.next'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "com.example.next"
+        minSdk 24
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    buildFeatures {
+        compose true
+    }
+}
+
+dependencies {
+    // Material components (needed for XML theme reference)
+    implementation libs.material
+
+    // Kotlin
+    implementation libs.core.ktx
+
+    // Compose BOM - controls all Compose library versions
+    implementation platform(libs.compose.bom)
+    implementation libs.compose.ui
+    implementation libs.compose.ui.graphics
+    implementation libs.compose.ui.tooling.preview
+    implementation libs.compose.material3
+    implementation libs.compose.material.icons.extended
+    debugImplementation libs.compose.ui.tooling
+
+    // Activity Compose
+    implementation libs.activity.compose
+
+    // Lifecycle
+    implementation libs.lifecycle.runtime.compose
+    implementation libs.lifecycle.viewmodel.compose
+
+    // Navigation Compose
+    implementation libs.navigation.compose
+
+    // Coil for image loading in Compose
+    implementation libs.coil.compose
+
+    // Testing
+    testImplementation libs.junit
+    androidTestImplementation libs.espresso.core
+    androidTestImplementation libs.ext.junit
+}

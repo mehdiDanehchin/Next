@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Primary Colors -->
+    <color name="primary">#2563EB</color>
+    <color name="primary_dark">#1D4ED8</color>
+    <color name="primary_light">#DBEAFE</color>
+
+    <!-- Background Colors -->
+    <color name="white">#FFFFFFFF</color>
+    <color name="background">#F8FAFC</color>
+    <color name="surface">#FFFFFFFF</color>
+    <color name="card_background">#FFFFFFFF</color>
+
+    <!-- Text Colors -->
+    <color name="black">#FF000000</color>
+    <color name="text_primary">#1E293B</color>
+    <color name="text_secondary">#64748B</color>
+    <color name="text_hint">#94A3B8</color>
+    <color name="text_on_primary">#FFFFFFFF</color>
+
+    <!-- Accent Colors -->
+    <color name="accent_green">#10B981</color>
+    <color name="accent_red">#EF4444</color>
+    <color name="accent_orange">#F59E0B</color>
+    <color name="accent_yellow">#FBBF24</color>
+
+    <!-- Divider & Border -->
+    <color name="divider">#E2E8F0</color>
+    <color name="border">#CBD5E1</color>
+
+    <!-- Shadow -->
+    <color name="shadow">#1A000000</color>
+
+    <!-- Icon Colors -->
+    <color name="icon_active">#2563EB</color>
+    <color name="icon_inactive">#94A3B8</color>
+
+    <!-- Star Rating -->
+    <color name="star_filled">#F59E0B</color>
+    <color name="star_empty">#D1D5DB</color>
+
+    <!-- Category Colors -->
+    <color name="phones_bg">#EFF6FF</color>
+    <color name="laptops_bg">#F0FDF4</color>
+    <color name="cameras_bg">#FFF7ED</color>
+    <color name="accessories_bg">#FDF2F8</color>
+</resources>

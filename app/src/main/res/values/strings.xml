@@ -1,0 +1,99 @@
+<resources>
+    <string name="app_name">Next</string>
+
+    <!-- Home Screen -->
+    <string name="search_hint">Search products...</string>
+    <string name="search_results">Search Results</string>
+    <string name="featured_products">Featured Products</string>
+    <string name="popular_products">Popular Products</string>
+    <string name="categories">Categories</string>
+    <string name="see_all">See All</string>
+
+    <!-- Categories -->
+    <string name="category_phones">Phones</string>
+    <string name="category_laptops">Laptops</string>
+    <string name="category_cameras">Cameras</string>
+    <string name="category_accessories">Accessories</string>
+
+    <!-- Product Detail -->
+    <string name="add_to_cart">Add to Cart</string>
+    <string name="add_to_wishlist">Add to Wishlist</string>
+    <string name="in_wishlist">In Wishlist</string>
+    <string name="remove_from_wishlist">Remove from Wishlist</string>
+    <string name="specifications">Specifications</string>
+    <string name="description">Description</string>
+    <string name="no_description">No description available.</string>
+    <string name="no_specifications">No specifications available.</string>
+    <string name="loading_product">Loading product…</string>
+    <string name="product_not_found">Product not found.</string>
+    <string name="load_error">Failed to load product.</string>
+    <string name="go_back">Go Back</string>
+    <string name="operation_failed">Operation failed. Please try again.</string>
+    <string name="added_to_cart">%s added to cart!</string>
+    <string name="added_to_wishlist">Added to wishlist</string>
+    <string name="removed_from_wishlist">Removed from wishlist</string>
+
+    <!-- Cart -->
+    <string name="cart_empty">Your cart is empty</string>
+    <string name="cart_start_shopping">Add products to get started!</string>
+    <string name="cart_total">Total</string>
+    <string name="checkout">Checkout</string>
+    <string name="demo_only">This is a demo application. Checkout is not available.</string>
+    <string name="demo_only_title">Demo Only</string>
+    <string name="removed_from_cart">%s removed from cart</string>
+
+    <plurals name="cart_item_count">
+        <item quantity="one">%d item</item>
+        <item quantity="other">%d items</item>
+    </plurals>
+
+    <!-- Wishlist -->
+    <string name="wishlist_empty">Your wishlist is empty</string>
+    <string name="wishlist_empty_subtitle">Tap the heart icon on products to save them here</string>
+
+    <plurals name="wishlist_item_count">
+        <item quantity="one">%d item</item>
+        <item quantity="other">%d items</item>
+    </plurals>
+
+    <!-- Profile -->
+    <string name="guest_user">Guest User</string>
+    <string name="guest_email">guest@next.com</string>
+    <string name="profile_avatar_letter">G</string>
+    <string name="app_version">Demo Application</string>
+    <string name="about_app">About Next</string>
+    <string name="settings">Settings</string>
+    <string name="about_description">Next is a modern e-commerce application for electronics. Built as a university Android course project.</string>
+
+    <!-- Bottom Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_wishlist">Wishlist</string>
+    <string name="nav_cart">Cart</string>
+    <string name="nav_profile">Profile</string>
+
+    <!-- Theme Settings -->
+    <string name="theme_settings">Theme</string>
+    <string name="theme_light">Light Mode</string>
+    <string name="theme_dark">Dark Mode</string>
+    <string name="theme_system">Follow System</string>
+
+    <!-- General -->
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="remove">Remove</string>
+    <string name="no_results">No products found</string>
+    <string name="all_products">All Products</string>
+    <string name="clear_filter">Clear</string>
+    <string name="filtering_by">%s</string>
+    <string name="rating_format">%.1f</string>
+
+    <!-- Content descriptions (accessibility) -->
+    <string name="cd_back_home">Back to home</string>
+    <string name="cd_clear_filter">Clear filter</string>
+    <string name="cd_search">Search</string>
+    <string name="cd_favorite">Favorite</string>
+    <string name="cd_back">Back</string>
+    <string name="cd_decrease">Decrease</string>
+    <string name="cd_increase">Increase</string>
+    <string name="cd_remove">Remove</string>
+</resources>
