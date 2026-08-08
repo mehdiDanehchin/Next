@@ -23,12 +23,14 @@ import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.SettingsSuggest
 import com.example.next.R
+import com.example.next.models.ThemeMode
 import com.example.next.ui.theme.*
 
 @Composable
 fun ProfileScreen(
     themeMode: ThemeMode = ThemeMode.SYSTEM,
-    onThemeChanged: (ThemeMode) -> Unit = {}
+    onThemeChanged: (ThemeMode) -> Unit = {},
+    onMyOrders: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
@@ -178,6 +180,43 @@ fun ProfileScreen(
                 colors = CardDefaults.cardColors(containerColor = customColors.surfaceWhite)
             ) {
                 Column(modifier = Modifier.padding(4.dp)) {
+                    // My Orders
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable(onClick = onMyOrders)
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_cart),
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp),
+                            tint = Primary
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Text(
+                            text = context.getString(R.string.orders_title),
+                            color = colorScheme.onSurface,
+                            fontSize = 15.sp,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Icon(
+                            painter = painterResource(R.drawable.ic_chevron_down),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(20.dp)
+                                .graphicsLayer { rotationZ = -90f },
+                            tint = customColors.textHint
+                        )
+                    }
+
+                    HorizontalDivider(
+                        modifier = Modifier.padding(start = 56.dp),
+                        thickness = 0.5.dp,
+                        color = customColors.divider
+                    )
+
                     // App Version
                     Row(
                         modifier = Modifier
@@ -300,6 +339,22 @@ fun ProfileScreen(
                         color = colorScheme.onSurfaceVariant,
                         fontSize = 14.sp,
                         lineHeight = 22.sp
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    // Developer credit: small label + name, subtle but elegant.
+                    Text(
+                        text = context.getString(R.string.about_developer),
+                        color = customColors.textHint,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = context.getString(R.string.about_developer_name),
+                        color = Primary,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        fontFamily = FontFamily.SansSerif
                     )
                 }
             }

@@ -15,6 +15,10 @@ activityCompose = "1.9.3"
 coreKtx = "1.15.0"
 lifecycleRuntime = "2.8.7"
 lifecycleViewmodelCompose = "2.8.7"
+room = "2.7.0"
+datastore = "1.1.1"
+splashscreen = "1.0.1"
+ksp = "2.0.21-1.0.28"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -50,6 +54,21 @@ navigation-compose = { group = "androidx.navigation", name = "navigation-compose
 # Coil for Compose
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
 
+# Room
+room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
+room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
+room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
+
+# DataStore
+datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
+
+# Splash Screen (AndroidX)
+core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "splashscreen" }
+
+# Lifecycle SavedState (createSavedStateHandle in ViewModel factories)
+lifecycle-viewmodel-savedstate = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-savedstate", version.ref = "lifecycleRuntime" }
+
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }

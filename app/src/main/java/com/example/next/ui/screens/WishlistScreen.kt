@@ -1,6 +1,5 @@
 package com.example.next.ui.screens
 
-import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -21,41 +20,31 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.next.ProductDetailActivity
 import com.example.next.R
 import com.example.next.models.WishlistItem
 import com.example.next.ui.theme.*
-import com.example.next.viewmodel.StoreViewModel
-import kotlinx.coroutines.launch
+import com.example.next.viewmodel.WishlistViewModel
 
 @Composable
-fun WishlistScreen(storeViewModel: StoreViewModel) {
-    val scope = rememberCoroutineScope()
+fun WishlistScreen(
+    wishlistViewModel: WishlistViewModel,
+    onProductClick: (Int) -> Unit
+) {
     val context = LocalContext.current
     val customColors = LocalCustomColors.current
     val colorScheme = MaterialTheme.colorScheme
 
-    val wishlistItems by storeViewModel.wishlistItems.collectAsStateWithLifecycle()
-    val wishlistCount by storeViewModel.wishlistCount.collectAsStateWithLifecycle()
+    val uiState by wishlistViewModel.uiState.collectAsStateWithLifecycle()
+    val wishlistItems = uiState.items
+    val wishlistCount = uiState.count
 
     fun handleRemove(item: WishlistItem) {
-        storeViewModel.removeFromWishlist(item.productId)
+        wishlistViewModel.removeItem(item.productId)
         android.widget.Toast.makeText(
             context,
             context.getString(R.string.removed_from_wishlist),
             android.widget.Toast.LENGTH_SHORT
         ).show()
-    }
-
-    fun handleItemClick(item: WishlistItem) {
-        scope.launch {
-            val product = storeViewModel.getProductById(item.productId)
-            if (product != null) {
-                val intent = Intent(context, ProductDetailActivity::class.java)
-                intent.putExtra("product_id", product.id)
-                context.startActivity(intent)
-            }
-        }
     }
 
     Column(
@@ -124,7 +113,7 @@ fun WishlistScreen(storeViewModel: StoreViewModel) {
                 itemsIndexed(wishlistItems, key = { _, item -> item.id }) { index, item ->
                     WishlistItemCard(
                         item = item,
-                        onClick = { handleItemClick(item) },
+                        onClick = { onProductClick(item.productId) },
                         onRemove = { handleRemove(item) }
                     )
                 }

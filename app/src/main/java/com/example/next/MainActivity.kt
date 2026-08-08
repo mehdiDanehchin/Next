@@ -5,50 +5,51 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import com.example.next.database.DatabaseHelper
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.next.di.AppContainer
 import com.example.next.ui.navigation.AppNavigation
 import com.example.next.ui.theme.NextTheme
-import com.example.next.ui.theme.ThemeMode
-import com.example.next.ui.theme.ThemePreferences
-import com.example.next.viewmodel.StoreViewModel
+import com.example.next.models.ThemeMode
+import com.example.next.viewmodel.CartViewModel
+import com.example.next.viewmodel.WishlistViewModel
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
-    private val dbHelper by lazy { DatabaseHelper.getInstance(this) }
-    private val storeViewModel: StoreViewModel by viewModels()
+    private val container: AppContainer by lazy { (application as NextApplication).container }
+
+    // Activity-scoped: shared by the bottom-nav badges and the Cart/Wishlist screens.
+    private val cartViewModel: CartViewModel by viewModels { container.cartViewModelFactory }
+    private val wishlistViewModel: WishlistViewModel by viewModels { container.wishlistViewModelFactory }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Show the pure-black splash theme until the first frame is ready.
+        // Must run before super.onCreate() per the AndroidX SplashScreen API.
+        installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        val savedMode = ThemePreferences.load(this)
-
         setContent {
-            var themeMode by remember { mutableStateOf(savedMode) }
+            // Theme is now reactive: DataStore emits the persisted mode and the
+            // whole tree recomposes. No manual save/load in the Activity anymore.
+            val themeMode by container.settingsRepository.themeMode
+                .collectAsStateWithLifecycle(initialValue = ThemeMode.SYSTEM)
+            val scope = rememberCoroutineScope()
 
             NextTheme(themeMode = themeMode) {
                 AppNavigation(
-                    dbHelper = dbHelper,
-                    storeViewModel = storeViewModel,
+                    container = container,
+                    cartViewModel = cartViewModel,
+                    wishlistViewModel = wishlistViewModel,
                     themeMode = themeMode,
                     onThemeChanged = { newMode ->
-                        themeMode = newMode
-                        ThemePreferences.save(this@MainActivity, newMode)
+                        scope.launch { container.settingsRepository.setThemeMode(newMode) }
                     }
                 )
             }
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        // Re-read cart/wishlist from the DB whenever this activity comes back to the
-        // foreground (e.g. after ProductDetailActivity added/removed items), so badges
-        // and screens never show stale data.
-        storeViewModel.refresh()
     }
 }

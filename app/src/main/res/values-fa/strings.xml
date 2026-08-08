@@ -3,12 +3,11 @@
     <string name="app_name">نکست</string>
 
     <!-- Home Screen -->
-    <string name="search_hint">جستجوی محصولات...</string>
+    <string name="search_hint">جستجوی محصولات…</string>
     <string name="search_results">نتایج جستجو</string>
     <string name="featured_products">محصولات ویژه</string>
     <string name="popular_products">محصولات پرطرفدار</string>
     <string name="categories">دسته‌بندی‌ها</string>
-    <string name="see_all">مشاهده همه</string>
 
     <!-- Categories -->
     <string name="category_phones">گوشی موبایل</string>
@@ -20,7 +19,6 @@
     <string name="add_to_cart">افزودن به سبد خرید</string>
     <string name="add_to_wishlist">افزودن به علاقه‌مندی‌ها</string>
     <string name="in_wishlist">در علاقه‌مندی‌ها</string>
-    <string name="remove_from_wishlist">حذف از علاقه‌مندی‌ها</string>
     <string name="specifications">مشخصات فنی</string>
     <string name="description">توضیحات</string>
     <string name="no_description">توضیحی در دسترس نیست.</string>
@@ -39,9 +37,41 @@
     <string name="cart_start_shopping">برای شروع، محصولات را اضافه کنید!</string>
     <string name="cart_total">جمع کل</string>
     <string name="checkout">تسویه حساب</string>
-    <string name="demo_only">این یک اپلیکیشن دمو است. تسویه حساب در دسترس نیست.</string>
-    <string name="demo_only_title">فقط نسخه دمو</string>
     <string name="removed_from_cart">%s از سبد خرید حذف شد</string>
+
+    <!-- Checkout -->
+    <string name="checkout_title">تسویه حساب</string>
+    <string name="checkout_your_items">اقلام سفارش</string>
+    <string name="checkout_address_title">آدرس ارسال</string>
+    <string name="checkout_full_name">نام و نام خانوادگی</string>
+    <string name="checkout_phone">شماره تماس</string>
+    <string name="checkout_city">شهر</string>
+    <string name="checkout_address">آدرس</string>
+    <string name="checkout_shipping_title">روش ارسال</string>
+    <string name="shipping_standard">ارسال استاندارد</string>
+    <string name="shipping_express">ارسال سریع</string>
+    <string name="shipping_pickup">تحویل حضوری</string>
+    <string name="free">رایگان</string>
+    <string name="place_order">ثبت سفارش</string>
+    <string name="order_placed">سفارش شماره %1$d با موفقیت ثبت شد!</string>
+    <string name="checkout_validation">لطفاً همه فیلدهای آدرس را تکمیل کنید.</string>
+    <string name="checkout_failed">ثبت سفارش ناموفق بود. لطفاً دوباره تلاش کنید.</string>
+
+    <!-- Orders -->
+    <string name="orders_title">سفارش‌های من</string>
+    <string name="orders_empty">هنوز سفارشی ثبت نکرده‌اید</string>
+    <string name="orders_empty_subtitle">سفارش‌های شما اینجا نمایش داده می‌شوند</string>
+    <string name="order_number">سفارش شماره %1$d</string>
+    <string name="order_subtotal">جمع اقلام</string>
+    <string name="order_shipping">هزینه ارسال</string>
+    <string name="order_total">مبلغ قابل پرداخت</string>
+    <string name="order_cancel">لغو سفارش</string>
+    <string name="order_cancelled">سفارش لغو شد</string>
+    <string name="status_pending">در انتظار بررسی</string>
+    <string name="status_processing">در حال پردازش</string>
+    <string name="status_shipped">ارسال شده</string>
+    <string name="status_delivered">تحویل شده</string>
+    <string name="status_cancelled">لغو شده</string>
 
     <plurals name="cart_item_count">
         <item quantity="one">%d کالا</item>
@@ -64,7 +94,9 @@
     <string name="app_version">اپلیکیشن دمو</string>
     <string name="about_app">درباره نکست</string>
     <string name="settings">تنظیمات</string>
-    <string name="about_description">نکست یک اپلیکیشن مدرن خرید کالاهای الکترونیکی است که به عنوان پروژه درسی دانشگاه ساخته شده است.</string>
+    <string name="about_description">NEXT یک اپلیکیشن مدرن فروشگاهی برای خرید کالای دیجیتال است که با Kotlin و Jetpack Compose ساخته شده است.</string>
+    <string name="about_developer">توسعه‌دهنده</string>
+    <string name="about_developer_name">Mehdi Danehchin</string>
 
     <!-- Bottom Navigation -->
     <string name="nav_home">خانه</string>
@@ -79,14 +111,22 @@
     <string name="theme_system">همگام با سیستم</string>
 
     <!-- General -->
-    <string name="ok">باشه</string>
-    <string name="cancel">انصراف</string>
-    <string name="remove">حذف</string>
-    <string name="no_results">محصولی یافت نشد</string>
-    <string name="all_products">همه محصولات</string>
-    <string name="clear_filter">پاک کردن</string>
-    <string name="filtering_by">%s</string>
-    <string name="rating_format">%.1f</string>
+        <string name="no_results">محصولی یافت نشد</string>
+        <string name="all_products">همه محصولات</string>
+
+    <!-- Sorting & Filtering -->
+    <string name="sort_recommended">پیشنهادی</string>
+    <string name="sort_price_asc">ارزان‌ترین</string>
+    <string name="sort_price_desc">گران‌ترین</string>
+    <string name="sort_rating">بیشترین امتیاز</string>
+    <string name="filter_all_prices">همه قیمت‌ها</string>
+    <string name="filter_under_500">زیر ۵۰۰ دلار</string>
+    <string name="filter_500_1500">۵۰۰ تا ۱۵۰۰ دلار</string>
+    <string name="filter_1500_2500">۱۵۰۰ تا ۲۵۰۰ دلار</string>
+    <string name="filter_over_2500">بالای ۲۵۰۰ دلار</string>
+    <string name="filter_all_ratings">همه امتیازها</string>
+    <string name="filter_rating_4">۴★ و بالاتر</string>
+    <string name="filter_rating_4_5">۴.۵★ و بالاتر</string>
 
     <!-- Content descriptions (accessibility) -->
     <string name="cd_back_home">بازگشت به خانه</string>

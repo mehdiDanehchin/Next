@@ -1,13 +1,36 @@
-*.iml
-.gradle
-.kotlin
-/local.properties
-/.idea
-.DS_Store
+# ---------- Gradle ----------
+.gradle/
 build/
-/captures
-.externalNativeBuild
-.cxx
+# Bare 'build/' also covers nested app/build/ dirs.
+# If using Android Studio 4.2+: also ignore Gradle local build cache
+.kotlin/
+
+# ---------- Local configuration (machine-specific / secrets) ----------
+# Contains the local SDK path; never commit it.
+local.properties
+# Signing keys — never commit real keystores.
+*.keystore
+*.jks
+
+# ---------- IDE ----------
+.idea/
+*.iml
+captures/
+.externalNativeBuild/
+.cxx/
+
+# ---------- Built artifacts ----------
+# App bundles / APKs produced for local install (also dist/ holds release copies).
+dist/
 *.apk
 *.aab
-*.keystore
+
+# ---------- OS / editor ----------
+.DS_Store
+Thumbs.db
+*.user
+
+# ---------- Logs & temp ----------
+*.log
+*.tmp
+*.hprof

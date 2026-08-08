@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -10,7 +11,7 @@ android {
     defaultConfig {
         applicationId "com.example.next"
         minSdk 24
-        targetSdk 34
+        targetSdk 35
         versionCode 1
         versionName "1.0"
 
@@ -41,6 +42,9 @@ dependencies {
     // Kotlin
     implementation libs.core.ktx
 
+    // Splash Screen (AndroidX)
+    implementation libs.core.splashscreen
+
     // Compose BOM - controls all Compose library versions
     implementation platform(libs.compose.bom)
     implementation libs.compose.ui
@@ -59,6 +63,17 @@ dependencies {
 
     // Navigation Compose
     implementation libs.navigation.compose
+
+    // Room
+    implementation libs.room.runtime
+    implementation libs.room.ktx
+    ksp libs.room.compiler
+
+    // DataStore
+    implementation libs.datastore.preferences
+
+    // SavedStateHandle helpers
+    implementation libs.lifecycle.viewmodel.savedstate
 
     // Coil for image loading in Compose
     implementation libs.coil.compose

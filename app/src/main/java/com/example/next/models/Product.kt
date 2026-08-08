@@ -1,5 +1,7 @@
 package com.example.next.models
 
+import java.util.Locale
+
 data class Product(
     val id: Int = 0,
     val name: String = "",
@@ -12,5 +14,5 @@ data class Product(
     val isPopular: Boolean = false,
     val rating: Float = 0f
 ) {
-    val formattedPrice: String get() = "$${String.format("%.2f", price)}"
+    val formattedPrice: String get() = "$${String.format(Locale.US, "%.2f", price)}"
 }

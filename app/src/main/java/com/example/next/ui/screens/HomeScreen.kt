@@ -1,13 +1,18 @@
 package com.example.next.ui.screens
 
-import android.content.Intent
+import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -29,16 +34,18 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.example.next.ProductDetailActivity
 import com.example.next.R
-import com.example.next.database.DatabaseHelper
+import com.example.next.di.AppContainer
 import com.example.next.models.Product
 import com.example.next.ui.theme.*
-import com.example.next.viewmodel.StoreViewModel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import com.example.next.viewmodel.HomeViewModel
+import com.example.next.viewmodel.PriceRangeFilter
+import com.example.next.viewmodel.ProductSortOption
+import com.example.next.viewmodel.RatingFilter
+import java.util.Locale
 
 data class CategoryItem(
     val key: String,
@@ -56,7 +63,9 @@ fun resolveImageRes(context: android.content.Context, imageName: String): Int {
 fun ProductImage(
     imageName: String,
     modifier: Modifier = Modifier,
-    contentScale: ContentScale = ContentScale.Crop
+    // Fit (never crop): every product image keeps its aspect ratio, is fully
+    // visible and centered, with empty space around it when ratios differ.
+    contentScale: ContentScale = ContentScale.Fit
 ) {
     val context = LocalContext.current
     val imageRes = remember(imageName) { resolveImageRes(context, imageName) }
@@ -83,23 +92,23 @@ fun ProductImage(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
-fun HomeScreen(dbHelper: DatabaseHelper, storeViewModel: StoreViewModel) {
-    val scope = rememberCoroutineScope()
+fun HomeScreen(
+    container: AppContainer,
+    onProductClick: (Product, Boolean) -> Unit,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedContentScope
+) {
+    val homeViewModel: HomeViewModel = viewModel(factory = container.homeViewModelFactory)
+    val uiState by homeViewModel.uiState.collectAsStateWithLifecycle()
+
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
     val customColors = LocalCustomColors.current
     val colorScheme = MaterialTheme.colorScheme
 
-    var featuredProducts by remember { mutableStateOf<List<Product>>(emptyList()) }
-    var popularProducts by remember { mutableStateOf<List<Product>>(emptyList()) }
-    var searchQuery by remember { mutableStateOf("") }
-    var noResultsVisible by remember { mutableStateOf(false) }
-    var isSearchActive by remember { mutableStateOf(false) }
-    var activeFilterCategory by remember { mutableStateOf<String?>(null) }
-
-    val isFilterActive = activeFilterCategory != null || isSearchActive
+    val isFilterActive = uiState.activeCategory != null || uiState.isSearchActive
 
     val categories = remember {
         listOf(
@@ -111,69 +120,8 @@ fun HomeScreen(dbHelper: DatabaseHelper, storeViewModel: StoreViewModel) {
         )
     }
 
-    LaunchedEffect(Unit) {
-        featuredProducts = dbHelper.getFeaturedProducts()
-        popularProducts = dbHelper.getPopularProducts()
-    }
-
-    fun restoreFullView() {
-        isSearchActive = false
-        activeFilterCategory = null
-        noResultsVisible = false
-        searchQuery = ""
-        focusManager.clearFocus()
-        scope.launch {
-            featuredProducts = dbHelper.getFeaturedProducts()
-            popularProducts = dbHelper.getPopularProducts()
-        }
-    }
-
     fun categoryDisplayName(category: String): String =
         categories.firstOrNull { it.key == category }?.let { context.getString(it.nameResId) } ?: category
-
-    fun handleCategoryClick(category: String) {
-        if (category == "All") {
-            restoreFullView()
-        } else {
-            scope.launch {
-                activeFilterCategory = category
-                isSearchActive = false
-                searchQuery = ""
-                val filtered = dbHelper.getProductsByCategory(category)
-                noResultsVisible = filtered.isEmpty()
-                popularProducts = filtered
-                featuredProducts = emptyList()
-            }
-        }
-    }
-
-    LaunchedEffect(searchQuery) {
-        if (searchQuery.isEmpty()) {
-            if (isSearchActive) {
-                delay(200)
-                isSearchActive = false
-                noResultsVisible = false
-                featuredProducts = dbHelper.getFeaturedProducts()
-                popularProducts = dbHelper.getPopularProducts()
-            }
-            return@LaunchedEffect
-        }
-
-        delay(300)
-
-        isSearchActive = true
-        activeFilterCategory = null
-        val results = dbHelper.searchProducts(searchQuery)
-        noResultsVisible = results.isEmpty()
-        popularProducts = results
-        featuredProducts = emptyList()
-    }
-
-    fun openProductDetail(product: Product) {
-        val intent = Intent(context, ProductDetailActivity::class.java)
-        intent.putExtra("product_id", product.id)
-        context.startActivity(intent)
-    }
 
     Column(
         modifier = Modifier
@@ -193,7 +141,7 @@ fun HomeScreen(dbHelper: DatabaseHelper, storeViewModel: StoreViewModel) {
             ) {
                 if (isFilterActive) {
                     IconButton(
-                        onClick = { restoreFullView() },
+                        onClick = { homeViewModel.restoreFullView() },
                         modifier = Modifier.size(36.dp)
                     ) {
                         Icon(
@@ -209,8 +157,8 @@ fun HomeScreen(dbHelper: DatabaseHelper, storeViewModel: StoreViewModel) {
 
                 Text(
                     text = when {
-                        isSearchActive -> context.getString(R.string.search_results)
-                        activeFilterCategory != null -> categoryDisplayName(activeFilterCategory!!)
+                        uiState.isSearchActive -> context.getString(R.string.search_results)
+                        uiState.activeCategory != null -> categoryDisplayName(uiState.activeCategory!!)
                         else -> context.getString(R.string.app_name)
                     },
                     color = if (isFilterActive) colorScheme.onSurface else Primary,
@@ -222,7 +170,7 @@ fun HomeScreen(dbHelper: DatabaseHelper, storeViewModel: StoreViewModel) {
 
                 if (isFilterActive) {
                     IconButton(
-                        onClick = { restoreFullView() },
+                        onClick = { homeViewModel.restoreFullView() },
                         modifier = Modifier.size(36.dp)
                     ) {
                         Icon(
@@ -259,8 +207,8 @@ fun HomeScreen(dbHelper: DatabaseHelper, storeViewModel: StoreViewModel) {
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     TextField(
-                        value = searchQuery,
-                        onValueChange = { searchQuery = it },
+                        value = uiState.searchQuery,
+                        onValueChange = { homeViewModel.onSearchQueryChange(it) },
                         placeholder = {
                             Text(
                                 context.getString(R.string.search_hint),
@@ -287,13 +235,14 @@ fun HomeScreen(dbHelper: DatabaseHelper, storeViewModel: StoreViewModel) {
             }
         }
 
-        // Scrollable content
-        LazyColumn(
+        // Scrollable content: 2-column product grid; headers/rows span the full width.
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 24.dp)
+            contentPadding = PaddingValues(start = 10.dp, end = 10.dp, bottom = 24.dp)
         ) {
-            if (noResultsVisible) {
-                item {
+            if (uiState.noResults) {
+                item(span = { GridItemSpan(maxLineSpan) }) {
                     Text(
                         text = context.getString(R.string.no_results),
                         color = colorScheme.onSurfaceVariant,
@@ -307,49 +256,54 @@ fun HomeScreen(dbHelper: DatabaseHelper, storeViewModel: StoreViewModel) {
             }
 
             if (!isFilterActive) {
-                item {
+                item(span = { GridItemSpan(maxLineSpan) }) {
                     Text(
                         text = context.getString(R.string.categories),
                         color = colorScheme.onSurface,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = FontFamily.SansSerif,
-                        modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 4.dp)
+                        modifier = Modifier.padding(start = 6.dp, top = 16.dp, bottom = 4.dp)
                     )
                 }
-                item {
+                item(span = { GridItemSpan(maxLineSpan) }) {
                     LazyRow(
-                        contentPadding = PaddingValues(horizontal = 12.dp),
+                        contentPadding = PaddingValues(horizontal = 2.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         items(categories) { cat ->
-                            CategoryChip(cat, onClick = { handleCategoryClick(cat.key) })
+                            CategoryChip(cat, onClick = { homeViewModel.selectCategory(cat.key) })
                         }
                     }
                 }
 
-                if (featuredProducts.isNotEmpty()) {
-                    item {
+                if (uiState.featuredProducts.isNotEmpty()) {
+                    item(span = { GridItemSpan(maxLineSpan) }) {
                         Text(
                             text = context.getString(R.string.featured_products),
                             color = colorScheme.onSurface,
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             fontFamily = FontFamily.SansSerif,
-                            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp)
+                            modifier = Modifier.padding(start = 6.dp, end = 6.dp, top = 12.dp)
                         )
                     }
-                    item {
+                    item(span = { GridItemSpan(maxLineSpan) }) {
                         LazyRow(
-                            contentPadding = PaddingValues(horizontal = 10.dp),
+                            contentPadding = PaddingValues(horizontal = 0.dp),
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            items(featuredProducts, key = { it.id }) { product ->
+                            items(uiState.featuredProducts, key = { it.id }) { product ->
                                 ProductCard(
                                     product = product,
-                                    dbHelper = dbHelper,
-                                    storeViewModel = storeViewModel,
-                                    onClick = { openProductDetail(it) }
+                                    homeViewModel = homeViewModel,
+                                    onClick = { onProductClick(it, true) },
+                                    // Per-section shared-element key: the same product
+                                    // also lives in the grid below, and keys must be
+                                    // unique within one SharedTransitionScope.
+                                    sharedElementKey = "featured_product_image_${product.id}",
+                                    sharedTransitionScope = sharedTransitionScope,
+                                    animatedVisibilityScope = animatedVisibilityScope
                                 )
                             }
                         }
@@ -357,41 +311,42 @@ fun HomeScreen(dbHelper: DatabaseHelper, storeViewModel: StoreViewModel) {
                 }
             }
 
-            if (popularProducts.isNotEmpty()) {
-                item {
+            if (uiState.visibleProducts.isNotEmpty()) {
+                item(span = { GridItemSpan(maxLineSpan) }) {
                     Text(
                         text = when {
-                            isSearchActive -> ""
-                            activeFilterCategory != null -> categoryDisplayName(activeFilterCategory!!)
+                            uiState.isSearchActive -> ""
+                            uiState.activeCategory != null -> categoryDisplayName(uiState.activeCategory!!)
                             else -> context.getString(R.string.popular_products)
                         },
                         color = colorScheme.onSurface,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = FontFamily.SansSerif,
-                        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp)
+                        modifier = Modifier.padding(start = 6.dp, end = 6.dp, top = 8.dp)
                     )
                 }
-                val rows = popularProducts.chunked(2)
-                items(rows) { row ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 10.dp),
-                        horizontalArrangement = Arrangement.spacedBy(0.dp)
-                    ) {
-                        for (product in row) {
-                            ProductCard(
-                                product = product,
-                                dbHelper = dbHelper,
-                                storeViewModel = storeViewModel,
-                                onClick = { openProductDetail(it) }
-                            )
-                        }
-                        if (row.size == 1) {
-                            Spacer(modifier = Modifier.width(172.dp))
-                        }
-                    }
+                item(span = { GridItemSpan(maxLineSpan) }) {
+                    SortFilterBar(
+                        sortOption = uiState.sortOption,
+                        priceFilter = uiState.priceFilter,
+                        ratingFilter = uiState.ratingFilter,
+                        onSortChange = homeViewModel::setSortOption,
+                        onPriceChange = homeViewModel::setPriceFilter,
+                        onRatingChange = homeViewModel::setRatingFilter
+                    )
+                }
+                gridItems(uiState.visibleProducts, key = { it.id }) { product ->
+                    ProductCard(
+                        product = product,
+                        homeViewModel = homeViewModel,
+                        onClick = { onProductClick(it, false) },
+                        fixedWidth = false,
+                        // Unique per-section key (see featured row above).
+                        sharedElementKey = "grid_product_image_${product.id}",
+                        sharedTransitionScope = sharedTransitionScope,
+                        animatedVisibilityScope = animatedVisibilityScope
+                    )
                 }
             }
         }
@@ -438,27 +393,29 @@ fun CategoryChip(item: CategoryItem, onClick: () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun ProductCard(
     product: Product,
-    dbHelper: DatabaseHelper,
-    storeViewModel: StoreViewModel,
-    onClick: (Product) -> Unit
+    homeViewModel: HomeViewModel,
+    onClick: (Product) -> Unit,
+    fixedWidth: Boolean = true,
+    sharedElementKey: String? = null,
+    sharedTransitionScope: SharedTransitionScope? = null,
+    animatedVisibilityScope: AnimatedContentScope? = null
 ) {
-    var isFav by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val customColors = LocalCustomColors.current
     val colorScheme = MaterialTheme.colorScheme
-    val wishlistVersion by storeViewModel.wishlistVersion.collectAsStateWithLifecycle()
 
-    LaunchedEffect(product.id, wishlistVersion) {
-        isFav = dbHelper.isInWishlist(product.id)
-    }
+    // Reactive favorite state: updates instantly when the wishlist changes anywhere.
+    val isFav by homeViewModel.isInWishlist(product.id).collectAsStateWithLifecycle(initialValue = false)
 
     Card(
         modifier = Modifier
-            .width(160.dp)
+            // Fixed width inside horizontal rows, fill the cell inside the grid.
+            .then(if (fixedWidth) Modifier.width(160.dp) else Modifier.fillMaxWidth())
             .padding(6.dp)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
@@ -471,29 +428,35 @@ fun ProductCard(
     ) {
         Column {
             Box(modifier = Modifier.height(140.dp)) {
+                val imageModifier = if (sharedTransitionScope != null &&
+                    animatedVisibilityScope != null && sharedElementKey != null
+                ) {
+                    // sharedElement is a member extension of SharedTransitionScope.
+                    with(sharedTransitionScope) {
+                        Modifier
+                            .fillMaxSize()
+                            .sharedElement(
+                                rememberSharedContentState(key = sharedElementKey),
+                                animatedVisibilityScope
+                            )
+                    }
+                } else {
+                    Modifier.fillMaxSize()
+                }
                 ProductImage(
                     imageName = product.imageUrl,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = imageModifier
                 )
 
                 IconButton(
                     onClick = {
-                        val newFavState = !isFav
-                        isFav = newFavState
-                        scope.launch {
-                            try {
-                                if (newFavState) {
-                                    storeViewModel.addToWishlist(product)
-                                    android.widget.Toast.makeText(context, context.getString(R.string.added_to_wishlist), android.widget.Toast.LENGTH_SHORT).show()
-                                } else {
-                                    storeViewModel.removeFromWishlist(product.id)
-                                    android.widget.Toast.makeText(context, context.getString(R.string.removed_from_wishlist), android.widget.Toast.LENGTH_SHORT).show()
-                                }
-                            } catch (e: Exception) {
-                                isFav = !newFavState
-                                android.widget.Toast.makeText(context, context.getString(R.string.operation_failed), android.widget.Toast.LENGTH_SHORT).show()
-                            }
+                        homeViewModel.toggleWishlist(product)
+                        val message = if (isFav) {
+                            context.getString(R.string.removed_from_wishlist)
+                        } else {
+                            context.getString(R.string.added_to_wishlist)
                         }
+                        android.widget.Toast.makeText(context, message, android.widget.Toast.LENGTH_SHORT).show()
                     },
                     modifier = Modifier
                         .align(Alignment.TopEnd)
@@ -529,7 +492,7 @@ fun ProductCard(
                     StarRating(rating = product.rating, starSize = 12.dp)
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "(%.1f)".format(product.rating),
+                        text = "(%.1f)".format(Locale.US, product.rating),
                         color = colorScheme.onSurfaceVariant,
                         fontSize = 11.sp
                     )
@@ -579,4 +542,123 @@ fun StarRating(rating: Float, starSize: androidx.compose.ui.unit.Dp) {
             )
         }
     }
+}
+
+/** Sort dropdown + price/rating filter chips, shown above the product grid. */
+@Composable
+private fun SortFilterBar(
+    sortOption: ProductSortOption,
+    priceFilter: PriceRangeFilter,
+    ratingFilter: RatingFilter,
+    onSortChange: (ProductSortOption) -> Unit,
+    onPriceChange: (PriceRangeFilter) -> Unit,
+    onRatingChange: (RatingFilter) -> Unit
+) {
+    val context = LocalContext.current
+    val customColors = LocalCustomColors.current
+    var sortMenuOpen by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 2.dp, vertical = 4.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            // Sort dropdown
+            Box {
+                Surface(
+                    onClick = { sortMenuOpen = true },
+                    shape = RoundedCornerShape(10.dp),
+                    color = customColors.primaryLight
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = context.getString(sortOptionLabelRes(sortOption)),
+                            color = Primary,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.SansSerif
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Icon(
+                            painter = painterResource(R.drawable.ic_chevron_down),
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = Primary
+                        )
+                    }
+                }
+                DropdownMenu(
+                    expanded = sortMenuOpen,
+                    onDismissRequest = { sortMenuOpen = false }
+                ) {
+                    ProductSortOption.entries.forEach { option ->
+                        DropdownMenuItem(
+                            text = { Text(context.getString(sortOptionLabelRes(option))) },
+                            onClick = {
+                                sortMenuOpen = false
+                                onSortChange(option)
+                            }
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            // Rating filter chips
+            LazyRow(modifier = Modifier.weight(1f)) {
+                RatingFilter.entries.forEach { filter ->
+                    item {
+                        FilterChip(
+                            selected = ratingFilter == filter,
+                            onClick = { onRatingChange(filter) },
+                            label = { Text(context.getString(ratingFilterLabelRes(filter)), fontSize = 12.sp) },
+                            modifier = Modifier.padding(end = 6.dp)
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        // Price filter chips
+        LazyRow(modifier = Modifier.fillMaxWidth()) {
+            PriceRangeFilter.entries.forEach { filter ->
+                item {
+                    FilterChip(
+                        selected = priceFilter == filter,
+                        onClick = { onPriceChange(filter) },
+                        label = { Text(context.getString(priceFilterLabelRes(filter)), fontSize = 12.sp) },
+                        modifier = Modifier.padding(end = 6.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+private fun sortOptionLabelRes(option: ProductSortOption): Int = when (option) {
+    ProductSortOption.RECOMMENDED -> R.string.sort_recommended
+    ProductSortOption.PRICE_ASC -> R.string.sort_price_asc
+    ProductSortOption.PRICE_DESC -> R.string.sort_price_desc
+    ProductSortOption.RATING_DESC -> R.string.sort_rating
+}
+
+private fun priceFilterLabelRes(filter: PriceRangeFilter): Int = when (filter) {
+    PriceRangeFilter.ALL -> R.string.filter_all_prices
+    PriceRangeFilter.UNDER_500 -> R.string.filter_under_500
+    PriceRangeFilter.RANGE_500_1500 -> R.string.filter_500_1500
+    PriceRangeFilter.RANGE_1500_2500 -> R.string.filter_1500_2500
+    PriceRangeFilter.OVER_2500 -> R.string.filter_over_2500
+}
+
+private fun ratingFilterLabelRes(filter: RatingFilter): Int = when (filter) {
+    RatingFilter.ALL -> R.string.filter_all_ratings
+    RatingFilter.AT_LEAST_4 -> R.string.filter_rating_4
+    RatingFilter.AT_LEAST_4_5 -> R.string.filter_rating_4_5
 }

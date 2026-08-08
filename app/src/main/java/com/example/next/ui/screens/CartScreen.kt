@@ -25,43 +25,34 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.next.R
 import com.example.next.models.CartItem
 import com.example.next.ui.theme.*
-import com.example.next.viewmodel.StoreViewModel
+import com.example.next.viewmodel.CartViewModel
+import java.util.Locale
 
 @Composable
-fun CartScreen(storeViewModel: StoreViewModel) {
+fun CartScreen(
+    cartViewModel: CartViewModel,
+    onCheckout: () -> Unit
+) {
     val context = LocalContext.current
     val customColors = LocalCustomColors.current
     val colorScheme = MaterialTheme.colorScheme
 
-    val cartItems by storeViewModel.cartItems.collectAsStateWithLifecycle()
-    val cartTotal by storeViewModel.cartTotal.collectAsStateWithLifecycle()
-    val cartItemCount by storeViewModel.cartCount.collectAsStateWithLifecycle()
-    var showDemoDialog by remember { mutableStateOf(false) }
+    val uiState by cartViewModel.uiState.collectAsStateWithLifecycle()
+    val cartItems = uiState.items
+    val cartTotal = uiState.total
+    val cartItemCount = uiState.count
 
     fun handleQuantityChanged(item: CartItem, newQuantity: Int) {
-        storeViewModel.updateCartQuantity(item.id, newQuantity)
+        cartViewModel.updateQuantity(item.id, newQuantity)
     }
 
     fun handleRemoveItem(item: CartItem) {
-        storeViewModel.removeFromCart(item.id)
+        cartViewModel.removeItem(item.id)
         android.widget.Toast.makeText(
             context,
             context.getString(R.string.removed_from_cart, item.productName),
             android.widget.Toast.LENGTH_SHORT
         ).show()
-    }
-
-    if (showDemoDialog) {
-        AlertDialog(
-            onDismissRequest = { showDemoDialog = false },
-            title = { Text(context.getString(R.string.demo_only_title)) },
-            text = { Text(context.getString(R.string.demo_only)) },
-            confirmButton = {
-                TextButton(onClick = { showDemoDialog = false }) {
-                    Text(context.getString(R.string.ok))
-                }
-            }
-        )
     }
 
     Column(
@@ -159,7 +150,7 @@ fun CartScreen(storeViewModel: StoreViewModel) {
                             modifier = Modifier.weight(1f)
                         )
                         Text(
-                            text = "$${String.format("%.2f", cartTotal)}",
+                            text = "$${String.format(Locale.US, "%.2f", cartTotal)}",
                             color = colorScheme.onSurface,
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold,
@@ -168,7 +159,7 @@ fun CartScreen(storeViewModel: StoreViewModel) {
                     }
 
                     Button(
-                        onClick = { showDemoDialog = true },
+                        onClick = onCheckout,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(50.dp),

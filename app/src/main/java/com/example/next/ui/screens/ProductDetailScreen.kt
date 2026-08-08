@@ -1,6 +1,9 @@
 package com.example.next.ui.screens
 
 import android.widget.Toast
+import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -19,51 +22,48 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.next.R
-import com.example.next.database.DatabaseHelper
-import com.example.next.models.Product
+import com.example.next.di.AppContainer
 import com.example.next.ui.theme.*
-import kotlinx.coroutines.launch
+import com.example.next.viewmodel.ProductDetailEvent
+import com.example.next.viewmodel.ProductDetailViewModel
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun ProductDetailScreen(
-    productId: Int,
-    dbHelper: DatabaseHelper,
-    onBack: () -> Unit
+    container: AppContainer,
+    onBack: () -> Unit,
+    fromFeatured: Boolean = false,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedContentScope
 ) {
-    val scope = rememberCoroutineScope()
+    val viewModel: ProductDetailViewModel = viewModel(factory = container.productDetailViewModelFactory)
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
     val context = LocalContext.current
     val customColors = LocalCustomColors.current
     val colorScheme = MaterialTheme.colorScheme
-
-    var product by remember { mutableStateOf<Product?>(null) }
-    var isLoading by remember { mutableStateOf(true) }
-    var loadError by remember { mutableStateOf<String?>(null) }
-    var isFavorite by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
 
-    LaunchedEffect(productId) {
-        isLoading = true
-        loadError = null
-        try {
-            val loadedProduct = dbHelper.getProductById(productId)
-            if (loadedProduct == null) {
-                loadError = context.getString(R.string.product_not_found)
-            } else {
-                product = loadedProduct
-                try {
-                    isFavorite = dbHelper.isInWishlist(loadedProduct.id)
-                } catch (_: Exception) {
+    // One-shot events (toasts) from the ViewModel.
+    LaunchedEffect(Unit) {
+        viewModel.events.collect { event ->
+            when (event) {
+                is ProductDetailEvent.Toast -> {
+                    val message = if (event.formatArg != null) {
+                        context.getString(event.messageRes, event.formatArg)
+                    } else {
+                        context.getString(event.messageRes)
+                    }
+                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                 }
             }
-        } catch (e: Exception) {
-            loadError = e.message ?: context.getString(R.string.load_error)
-        } finally {
-            isLoading = false
         }
     }
 
-    if (isLoading) {
+    if (uiState.isLoading) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -83,7 +83,7 @@ fun ProductDetailScreen(
         return
     }
 
-    if (loadError != null || product == null) {
+    if (uiState.errorRes != null || uiState.product == null) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -102,7 +102,8 @@ fun ProductDetailScreen(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = loadError ?: context.getString(R.string.product_not_found),
+                    text = uiState.errorRes?.let { context.getString(it) }
+                        ?: context.getString(R.string.product_not_found),
                     color = colorScheme.onSurfaceVariant,
                     fontSize = 16.sp,
                     textAlign = TextAlign.Center
@@ -126,35 +127,8 @@ fun ProductDetailScreen(
         return
     }
 
-    val p = product!!
-
-    fun toggleFavorite() {
-        scope.launch {
-            try {
-                if (isFavorite) {
-                    dbHelper.removeFromWishlist(p.id)
-                    Toast.makeText(context, context.getString(R.string.removed_from_wishlist), Toast.LENGTH_SHORT).show()
-                } else {
-                    dbHelper.addToWishlist(p)
-                    Toast.makeText(context, context.getString(R.string.added_to_wishlist), Toast.LENGTH_SHORT).show()
-                }
-                isFavorite = !isFavorite
-            } catch (e: Exception) {
-                Toast.makeText(context, context.getString(R.string.operation_failed), Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
-    fun addToCart() {
-        scope.launch {
-            try {
-                dbHelper.addToCart(p)
-                Toast.makeText(context, context.getString(R.string.added_to_cart, p.name), Toast.LENGTH_SHORT).show()
-            } catch (e: Exception) {
-                Toast.makeText(context, context.getString(R.string.operation_failed), Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
+    val p = uiState.product!!
+    val isFavorite = uiState.isFavorite
 
     Column(
         modifier = Modifier
@@ -185,7 +159,7 @@ fun ProductDetailScreen(
                 fontFamily = FontFamily.SansSerif,
                 modifier = Modifier.weight(1f)
             )
-            IconButton(onClick = { toggleFavorite() }, modifier = Modifier.size(40.dp)) {
+            IconButton(onClick = { viewModel.toggleFavorite() }, modifier = Modifier.size(40.dp)) {
                 Icon(
                     painter = painterResource(
                         if (isFavorite) R.drawable.ic_heart_filled else R.drawable.ic_heart
@@ -207,8 +181,26 @@ fun ProductDetailScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(280.dp)
-                    .background(customColors.surfaceWhite),
-                contentScale = ContentScale.Crop
+                    .background(customColors.surfaceWhite)
+                    // Same per-section key as the home thumbnail that was tapped:
+                    // the image morphs between the two screens instead of fading.
+                    // (Keys must be unique within the SharedTransitionScope, so
+                    // the featured row and the grid use different prefixes.)
+                    .let { base ->
+                        with(sharedTransitionScope) {
+                            base.sharedElement(
+                                rememberSharedContentState(
+                                    key = if (fromFeatured) {
+                                        "featured_product_image_${p.id}"
+                                    } else {
+                                        "grid_product_image_${p.id}"
+                                    }
+                                ),
+                                animatedVisibilityScope
+                            )
+                        }
+                    },
+                contentScale = ContentScale.Fit
             )
 
             Card(
@@ -300,7 +292,7 @@ fun ProductDetailScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Button(
-                    onClick = { toggleFavorite() },
+                    onClick = { viewModel.toggleFavorite() },
                     modifier = Modifier
                         .weight(1f)
                         .height(50.dp),
@@ -319,7 +311,7 @@ fun ProductDetailScreen(
                 Spacer(modifier = Modifier.width(16.dp))
 
                 Button(
-                    onClick = { addToCart() },
+                    onClick = { viewModel.addToCart() },
                     modifier = Modifier
                         .weight(1f)
                         .height(50.dp),
