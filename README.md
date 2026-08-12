@@ -1,6 +1,22 @@
 # Next
 
+[![Platform](https://img.shields.io/badge/Platform-Android-3DDC84)](https://www.android.com)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.0.21-7F52FF)](https://kotlinlang.org)
+[![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-BOM%202024.12.01-4285F4)](https://developer.android.com/compose)
+[![minSdk](https://img.shields.io/badge/minSdk-24-34A853)](https://developer.android.com/about/versions/nougat/android-7.0)
+[![AGP](https://img.shields.io/badge/AGP-9.2.1-FF6F00)](https://developer.android.com/build)
+
 **Next** is a modern e-commerce application for digital goods (phones, laptops, cameras and accessories), built with **Kotlin** and **Jetpack Compose**. It combines a clean Material 3 interface with a fully offline-first data layer powered by Room.
+
+## Screenshots
+
+<p align="center">
+  <img src="screenshots/1.png" width="19%" alt="Next app screenshot 1" />
+  <img src="screenshots/2.png" width="19%" alt="Next app screenshot 2" />
+  <img src="screenshots/3.png" width="19%" alt="Next app screenshot 3" />
+  <img src="screenshots/4.png" width="19%" alt="Next app screenshot 4" />
+  <img src="screenshots/5.png" width="19%" alt="Next app screenshot 5" />
+</p>
 
 ## Features
 
