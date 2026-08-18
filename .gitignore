@@ -34,3 +34,8 @@ Thumbs.db
 *.log
 *.tmp
 *.hprof
+
+# ---------- Firebase ----------
+# google-services.json is per-project configuration (Firebase Console output);
+# it is machine/project specific and must never be committed.
+google-services.json

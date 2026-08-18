@@ -88,8 +88,10 @@
 
     <!-- Profile -->
     <string name="guest_user">Guest User</string>
-    <string name="guest_email">guest@next.com</string>
     <string name="profile_avatar_letter">G</string>
+    <string name="sign_in_hint">Sign in to access account features</string>
+    <string name="sign_in_with_google">Continue with Google</string>
+    <string name="sign_out">Sign Out</string>
     <string name="app_version">Demo Application</string>
     <string name="about_app">About Next</string>
     <string name="settings">Settings</string>
@@ -112,6 +114,13 @@
     <!-- General -->
     <string name="no_results">No products found</string>
     <string name="all_products">All Products</string>
+
+    <!-- Account / Sign-in errors (user-friendly, non-technical) -->
+    <string name="error_signin_failed">Sign-in failed. Please try again.</string>
+    <string name="error_signin_network">Check your internet connection and try again.</string>
+    <string name="error_signin_no_account">No Google account found on this device. Add one in Settings and try again.</string>
+    <string name="error_signin_unavailable">Sign-in is not available right now. Please try again later.</string>
+    <string name="error_profile_sync">You are signed in, but your profile could not be synced.</string>
 
     <!-- Sorting & Filtering -->
     <string name="sort_recommended">Recommended</string>

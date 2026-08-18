@@ -8,11 +8,13 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.next.database.dao.CartDao
 import com.example.next.database.dao.OrderDao
+import com.example.next.database.dao.PendingOpsDao
 import com.example.next.database.dao.ProductDao
 import com.example.next.database.dao.WishlistDao
 import com.example.next.database.entity.CartItemEntity
 import com.example.next.database.entity.OrderEntity
 import com.example.next.database.entity.OrderItemEntity
+import com.example.next.database.entity.PendingOpEntity
 import com.example.next.database.entity.ProductEntity
 import com.example.next.database.entity.WishlistItemEntity
 
@@ -23,6 +25,10 @@ import com.example.next.database.entity.WishlistItemEntity
  * legacy tables aside, creating the Room schema, and copying rows across with
  * COALESCE normalization for columns that used to be nullable.
  * Version 4 adds the checkout feature: `orders` and `order_items` tables.
+ * Version 5 adds user-ownership: `owner` on wishlist/cart/orders, the
+ * client-generated `cloud_id` on orders, and the offline `pending_ops` outbox.
+ * Pre-v5 rows get owner/cloud_id backfilled in app code at startup (the guest
+ * id is runtime-generated); nothing is deleted.
  */
 @Database(
     entities = [
@@ -30,9 +36,10 @@ import com.example.next.database.entity.WishlistItemEntity
         CartItemEntity::class,
         WishlistItemEntity::class,
         OrderEntity::class,
-        OrderItemEntity::class
+        OrderItemEntity::class,
+        PendingOpEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -45,9 +52,22 @@ abstract class AppDatabase : RoomDatabase() {
 
     abstract fun orderDao(): OrderDao
 
+    abstract fun pendingOpsDao(): PendingOpsDao
+
     companion object {
 
         const val DATABASE_NAME = "next_store.db"
+
+        private const val CREATE_PENDING_OPS =
+            "CREATE TABLE IF NOT EXISTS `pending_ops` (" +
+                "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                "`owner` TEXT NOT NULL, " +
+                "`table_name` TEXT NOT NULL, " +
+                "`row_id` TEXT NOT NULL, " +
+                "`op` TEXT NOT NULL, " +
+                "`payload` TEXT NOT NULL, " +
+                "`created_at` INTEGER NOT NULL, " +
+                "`attempt` INTEGER NOT NULL)"
 
         private const val CREATE_PRODUCTS =
             "CREATE TABLE IF NOT EXISTS `products` (" +
@@ -153,6 +173,22 @@ abstract class AppDatabase : RoomDatabase() {
         }
 
         /**
+         * 4 -> 5: add user-ownership. Pure additive migration — NO data is
+         * deleted or transformed. The DEFAULT '' placeholder becomes the real
+         * owner (`guest:<uuid>`) in app code at startup, because the guest id
+         * is runtime-generated and cannot be known inside the Migration.
+         */
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `wishlist` ADD COLUMN `owner` TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE `cart` ADD COLUMN `owner` TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE `orders` ADD COLUMN `owner` TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE `orders` ADD COLUMN `cloud_id` TEXT NOT NULL DEFAULT ''")
+                db.execSQL(CREATE_PENDING_OPS)
+            }
+        }
+
+        /**
          * Seeds the catalog on a fresh database. Also hooked into onOpen so the
          * catalog self-heals after any destructive fallback. Idempotent (only
          * inserts when the products table is empty).
@@ -171,7 +207,7 @@ abstract class AppDatabase : RoomDatabase() {
 
         fun build(context: Context): AppDatabase =
             Room.databaseBuilder(context, AppDatabase::class.java, DATABASE_NAME)
-                .addMigrations(MIGRATION_2_3, MIGRATION_3_4)
+                .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                 // Safety net for any database older than v2; user data from v1 was
                 // already wiped by the legacy app's own onUpgrade logic.
                 .fallbackToDestructiveMigration(dropAllTables = true)

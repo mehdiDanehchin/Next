@@ -21,7 +21,10 @@ data class WishlistItemEntity(
     @ColumnInfo(name = "price")
     val price: Double = 0.0,
     @ColumnInfo(name = "image_url")
-    val imageUrl: String = ""
+    val imageUrl: String = "",
+    // Owner-scoping (v5), see CartItemEntity.owner.
+    @ColumnInfo(name = "owner", defaultValue = "''")
+    val owner: String = ""
 )
 
 fun WishlistItemEntity.toModel(): WishlistItem = WishlistItem(

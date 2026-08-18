@@ -15,6 +15,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -35,6 +36,7 @@ import com.example.next.ui.screens.ProfileScreen
 import com.example.next.ui.screens.WishlistScreen
 import com.example.next.ui.theme.*
 import com.example.next.viewmodel.CartViewModel
+import com.example.next.viewmodel.ProfileViewModel
 import com.example.next.viewmodel.WishlistViewModel
 
 sealed class BottomNavItem(
@@ -190,7 +192,10 @@ fun AppNavigation(
                 )
             }
             composable(BottomNavItem.Profile.route) {
+                val profileViewModel: ProfileViewModel =
+                    viewModel(factory = container.profileViewModelFactory)
                 ProfileScreen(
+                    profileViewModel = profileViewModel,
                     themeMode = themeMode,
                     onThemeChanged = onThemeChanged,
                     onMyOrders = { navController.navigate(ORDERS_ROUTE) }

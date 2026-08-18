@@ -89,8 +89,10 @@
 
     <!-- Profile -->
     <string name="guest_user">کاربر مهمان</string>
-    <string name="guest_email">guest@next.com</string>
     <string name="profile_avatar_letter">م</string>
+    <string name="sign_in_hint">برای استفاده از امکانات حساب کاربری وارد شوید</string>
+    <string name="sign_in_with_google">ادامه با Google</string>
+    <string name="sign_out">خروج از حساب</string>
     <string name="app_version">اپلیکیشن دمو</string>
     <string name="about_app">درباره نکست</string>
     <string name="settings">تنظیمات</string>
@@ -113,6 +115,13 @@
     <!-- General -->
         <string name="no_results">محصولی یافت نشد</string>
         <string name="all_products">همه محصولات</string>
+
+    <!-- Account / Sign-in errors (user-friendly, non-technical) -->
+    <string name="error_signin_failed">ورود انجام نشد. لطفاً دوباره تلاش کنید.</string>
+    <string name="error_signin_network">اتصال اینترنت را بررسی کنید و دوباره تلاش کنید.</string>
+    <string name="error_signin_no_account">حساب Google روی این دستگاه یافت نشد. از تنظیمات یک حساب اضافه کنید و دوباره تلاش کنید.</string>
+    <string name="error_signin_unavailable">ورود در حال حاضر در دسترس نیست. لطفاً بعداً دوباره تلاش کنید.</string>
+    <string name="error_profile_sync">ورود انجام شد، اما همگام‌سازی پروفایل ناموفق بود.</string>
 
     <!-- Sorting & Filtering -->
     <string name="sort_recommended">پیشنهادی</string>

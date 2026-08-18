@@ -2,6 +2,10 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
+    // Generates Firebase resources (google_app_id, default_web_client_id, ...)
+    // from app/google-services.json. Keep that file out of version control
+    // (see .gitignore) — it contains project-specific configuration keys.
+    alias(libs.plugins.google.services)
 }
 
 android {
@@ -78,8 +82,24 @@ dependencies {
     // Coil for image loading in Compose
     implementation libs.coil.compose
 
+    // Firebase (BoM pins compatible versions of all Firebase libraries)
+    implementation platform(libs.firebase.bom)
+    implementation libs.firebase.auth
+    implementation libs.firebase.firestore
+
+    // Credential Manager + Sign in with Google (modern account-credential flow)
+    implementation libs.credentials
+    implementation libs.credentials.play.services.auth
+    implementation libs.googleid
+
+    // Firebase Task -> coroutines .await()
+    implementation libs.kotlinx.coroutines.play.services
+
     // Testing
     testImplementation libs.junit
+    // org.json is an Android runtime class; JVM unit tests need the real JVM
+    // implementation to exercise the pending_ops payload codec.
+    testImplementation "org.json:json:20240303"
     androidTestImplementation libs.espresso.core
     androidTestImplementation libs.ext.junit
 }

@@ -1,0 +1,139 @@
+rules_version = '2';
+
+// Next — Firestore Security Rules (v2: user-owned data)
+//
+// EVERY user-owned dataset lives under users/{uid} and is readable/writable
+// ONLY by that same authenticated user (fail-closed: the catch-all at the
+// bottom denies everything else, including all unauthenticated access).
+//
+//   users/{uid}                          profile
+//   users/{uid}/wishlist/{productId}     wishlist (set semantics, upsert)
+//   users/{uid}/cart/{productId}         cart (LWW, quantity 1..99)
+//   users/{uid}/orders/{orderId}         orders (append-only + cancel)
+//   users/{uid}/orders/{orderId}/items/{productId}   order line items (immutable)
+//   users/{uid}/settings/settings        settings (allowlisted keys)
+//
+// Constraint summary:
+//  - guests (request.auth == null) have NO access to anything
+//  - orders: create only with status PENDING; the ONLY client update allowed
+//    is PENDING -> CANCELLED; deletes are forbidden; items are immutable
+//  - cart: quantity int 1..99; snapshot fields (name/price/image) immutable
+//    after create; deletes allowed
+//  - profile: uid and createdAt are immutable; the rest is mergeable
+//
+// NOTE: rules cannot verify order totals or that a product exists — a rooted
+// client holding a valid uid could forge order documents. If the app moves to
+// real fulfillment, order creation should move to a Cloud Function
+// (architecture note: the client currently writes orders directly, so nothing
+// in the app code needs to change for that migration).
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    // ---------------- Profile ----------------
+
+    match /users/{uid} {
+      allow read: if isOwner(uid);
+
+      allow create: if isOwner(uid)
+        && request.resource.data.keys().hasAll(['uid', 'createdAt']);
+
+      // uid and createdAt are immutable; every other field may be merged
+      // (displayName, email, photoUrl, lastLoginAt, preferences, guestMergedAt).
+      allow update: if isOwner(uid)
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['uid', 'createdAt']);
+
+      allow delete: if false;
+
+      // ---------------- Wishlist ----------------
+
+      match /wishlist/{productId} {
+        allow read: if isOwner(uid);
+
+        allow create, update: if isOwner(uid)
+          && request.resource.data.keys().hasOnly(
+            ['productId', 'productName', 'price', 'imageUrl', 'addedAt']);
+
+        allow delete: if isOwner(uid);
+      }
+
+      // ---------------- Cart ----------------
+
+      match /cart/{productId} {
+        allow read: if isOwner(uid);
+
+        allow create: if isOwner(uid)
+          && request.resource.data.keys().hasOnly(
+            ['productId', 'productName', 'price', 'imageUrl', 'quantity', 'updatedAt'])
+          && request.resource.data.quantity is int
+          && request.resource.data.quantity >= 1
+          && request.resource.data.quantity <= 99;
+
+        // LWW: only quantity and updatedAt may change; the snapshot fields
+        // (productName/price/imageUrl) are immutable after create.
+        allow update: if isOwner(uid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['quantity', 'updatedAt'])
+          && request.resource.data.quantity is int
+          && request.resource.data.quantity >= 1
+          && request.resource.data.quantity <= 99;
+
+        allow delete: if isOwner(uid);
+      }
+
+      // ---------------- Orders ----------------
+
+      match /orders/{orderId} {
+        allow read: if isOwner(uid);
+
+        // Creation is client-side for now; status must be PENDING and the
+        // field set is allowlisted (snapshots + totals are fixed at create).
+        allow create: if isOwner(uid)
+          && request.resource.data.status == 'PENDING'
+          && request.resource.data.keys().hasOnly(
+            ['orderId', 'orderDate', 'status', 'fullName', 'phone', 'address',
+             'city', 'shippingMethod', 'shippingPrice', 'subtotal', 'total',
+             'createdAt', 'updatedAt']);
+
+        // The ONLY permitted client transition: PENDING -> CANCELLED.
+        allow update: if isOwner(uid)
+          && resource.data.status == 'PENDING'
+          && request.resource.data.status == 'CANCELLED'
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt']);
+
+        allow delete: if false;
+
+        // Line items are immutable after creation.
+        match /items/{productId} {
+          allow read: if isOwner(uid);
+
+          allow create: if isOwner(uid)
+            && request.resource.data.keys().hasOnly(
+              ['productId', 'productName', 'price', 'imageUrl', 'quantity']);
+
+          allow update, delete: if false;
+        }
+      }
+
+      // ---------------- Settings ----------------
+
+      match /settings/settings {
+        allow read: if isOwner(uid);
+
+        // Allowlisted keys only (theme mode is an enum).
+        allow write: if isOwner(uid)
+          && request.resource.data.keys().hasOnly(['themeMode', 'updatedAt'])
+          && request.resource.data.themeMode in ['LIGHT', 'DARK', 'SYSTEM'];
+      }
+    }
+
+    // Fail closed: everything else — including every unauthenticated read,
+    // other users' documents, and any future path — is denied.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

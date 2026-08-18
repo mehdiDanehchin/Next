@@ -33,7 +33,17 @@ data class OrderEntity(
     @ColumnInfo(name = "subtotal")
     val subtotal: Double,
     @ColumnInfo(name = "total")
-    val total: Double
+    val total: Double,
+    // Owner-scoping (v5), see CartItemEntity.owner.
+    @ColumnInfo(name = "owner", defaultValue = "''")
+    val owner: String = "",
+    // Client-generated Firestore document id (v5): NEVER the Room autoincrement
+    // Long, which is device-local and would collide across devices. Guest orders
+    // get a deterministic id (MergeId.guestOrderCloudId) so merge/flush retries
+    // cannot duplicate documents; signed-in orders get a uuid. Legacy rows are
+    // backfilled in app code at startup.
+    @ColumnInfo(name = "cloud_id", defaultValue = "''")
+    val cloudId: String = ""
 )
 
 fun OrderEntity.toModel(): Order = Order(

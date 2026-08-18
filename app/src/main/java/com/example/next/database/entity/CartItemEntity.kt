@@ -23,7 +23,14 @@ data class CartItemEntity(
     @ColumnInfo(name = "image_url")
     val imageUrl: String = "",
     @ColumnInfo(name = "quantity")
-    val quantity: Int = 1
+    val quantity: Int = 1,
+    // Owner-scoping (v5): every user-owned row belongs to exactly one owner
+    // (`guest:<uuid>` or `uid:<firebase uid>`). Rows from before the v5
+    // migration carry '' and are backfilled to the current guest owner in app
+    // code at startup (the guest id is runtime-generated, so the Migration
+    // itself cannot compute it).
+    @ColumnInfo(name = "owner", defaultValue = "''")
+    val owner: String = ""
 )
 
 fun CartItemEntity.toModel(): CartItem = CartItem(
